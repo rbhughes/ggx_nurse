@@ -1,0 +1,7 @@
+c:\Programdata\geographix\projects\stratton
+<<<<<<< HEAD
+E:\ARCHIVE_GGX0002\Oklahoma\Oklahoma
+=======
+c:\Programdata\geographix\projects\Powder
+c:\Programdata\geographix\projects\strat with space
+>>>>>>> 6d1f9474a194798bc42f15baf206ee7f4b78495b

@@ -20,7 +20,7 @@ LMKR recognized the need for this maintenance (either preventative or post-morte
 ###Features
 * Pre and post-email notification
 * Logging for every project rebuild and full job summary
-* Removes temp and lock files: `.dbR .logR .lok
+* Removes temp and lock files: `.dbR .logR .lok`
 * Drops all known "leftover" temp tables and views in project databases
 * Tested in Discovery versions 2015.x and 2016.x (others work too)
 * Yep, it's just a PowerShell v3 script
@@ -43,7 +43,7 @@ Example:
 
 `C:\ProgramData\GeoGraphix\Stratton\User Files\ggx.nurse`
 
-File content is ignored.
+_File content in ggx.nurse is ignored._
 
 
 ###Dependencies and Assumptions:
@@ -54,7 +54,7 @@ File content is ignored.
 * Project Homes are accessible to the account running the script
 * Normal PowerShell restrictions apply; contact your sys-admins for details.
 
-If you like to live (slightly) dangerously, you can disable restrictions like this:
+If you like to live (slightly) dangerously, you can disable PowerShell restrictions like this:
 
 `Set-ExecutionPolicy unrestricted`
 

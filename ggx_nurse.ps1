@@ -8,16 +8,16 @@ Run this utility periodically on selected projects to:
 * remove accumulated junk temp tables and views
 * perform SAP Anywhere's dbunload (like LMKR's ProjectDatabaseRebuilder.exe)
 * email start/stop, serious errors, and summary of results
-To target a particular project for "nursing", add a text file named
+To target a particular project for "nursing", add a file (content ignored) named
 "ggx.nurse" directly in the project's User Files folder. Ex:
 
 C:\ProgramData\GeoGraphix\Projects\Stratton\User Files\ggx.nurse
 
-.PARAMETER default_sender
-Email will be sent from this address: ggx_nurse@epcompany.com
+.PARAMETER email_from
+Email will be sent from this address: ggx_nurse@example.com
 
-.PARAMETER default_recipient
-If no emails are specified in trigger files, use this single addresss
+.PARAMETER email_to
+One or more recipients of notification emails ("user1@example.com","user2@example.com")
 
 .PARAMETER smtp_server
 Server to handle PowerShell's Send-MailMessage function: smtp.company.com
@@ -29,7 +29,7 @@ Directory to contain time-stamped sets of rebuild logs and other activity
 ggx_nurse.ps1 -log_dir "c:\ggxlogs\nurse" 
 PowerShell c:\dev\scripts\ggx_nurse.ps1 -email_to rbhughes@logicalcat.com
 
-PowerShell -ExecutionPolicy bypass -File '\\okc1ggx0001\prod_nurse$\ggx_nurse.ps1'
+PowerShell -ExecutionPolicy bypass -File '\\ex1ggx1\prod_nurse$\ggx_nurse.ps1'
 
 .NOTES
 R. Bryan Hughes | rbhughes@logicalcat.com | 303-949-8125
@@ -46,10 +46,10 @@ Start in: \\geoserv\scripts
 
 [CmdletBinding()]
 param(
-  [string]$default_sender = "ggx_nurse@xxxxxx.com",
-  [string]$default_recipient = "bhughes1@xxxxxx.com",
-  [string]$smtp_server = "smtp.xxxxx.com",
-  [string]$log_dir = "c:\\ggx_nurse\\logs"
+  [string]$email_from = "ggx_nurse@example.com",
+  [string[]]$email_to = ("bhughes1@example.com","rbhughes@example.com"),
+  [string]$smtp_server = "smtp.example.com",
+  [string]$log_dir = "\\ex1ggx1\prod_nurse$\logs"
 )
 
 
@@ -64,7 +64,6 @@ param(
 
 
 $logfile #gets defined at runtime for each project
-$email_to = New-Object System.Collections.ArrayList
 
 
 #--------
@@ -73,9 +72,6 @@ function Log-Write([string]$s) {
   Write-Host $s -ForegroundColor Yellow
   Add-content $logfile -value $s
 }
-
-
-
 
 
 
@@ -180,26 +176,9 @@ function Initialize-ConnParams([string] $project) {
 
 
 #---------
-# Reads content of a trigger file to collect any valid emails. These get
-# used by the $email_to variable. Sorry, I forgot where I stole that awful regex--
-# will add attribution later--not sure if it fully works yet.
-# returns a somewhat-validated email string
-function Get-ScrubbedEmail([string] $path) {
-  $content = (Get-Content $path)
-  if ($content) {
-    $re="[a-z0-9!#\$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#\$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?"
-    $m = [regex]::Match($content, $re, "IgnoreCase ")
-    return $m.value
-  }
-}
-
-
-
-
-#---------
 # WARNING: can be a bit slow in large environments!
-# Recurse through all the project homes managed by this server. If a project's
-# User Files folder contains a ggx.nurse file, add it to the list.
+# Recurse through all the project homes managed by this server. 
+# If a project's User Files folder contains a ggx.nurse file, add it.
 # TODO: set recursion depth limit to speed things up a bit
 # returns array of project path strings to rebuild
 function Get-ProjectRebuildList {
@@ -218,29 +197,20 @@ function Get-ProjectRebuildList {
       
       if ((Test-Path $projggx) -and (Test-Path $trigger)) {
         [void]$rebuilds.add($adir.FullName)
-        [void]$email_to.add( (Get-ScrubbedEmail($trigger)) )
       }
     }
   }
+  
   return $rebuilds
 }
 
 
 
 #---------
-# Send an email to every recipient parsed from trigger files or default.
-# Calling functions determine the subject/body content
+# Send an email to every recipient. Calling functions determine the subject/body content
 function Send-Email([string]$subj, [string]$body) {
-
-  #$email_to = $email_to | ? {$_}
-  $email_to = ($email_to | Sort-Object | Get-Unique -AsString)
-  if (! $email_to ) {
-    #Log-Write "no emails parsed from trigger files. Using default: $default_recipient"
-    $email_to = $default_recipient
-  }
-
   try {
-    Send-MailMessage -from $default_sender -to $email_to -subject $subj -body $body -SmtpServer $smtp_server -ErrorAction Stop
+    Send-MailMessage -from $email_from -to $email_to -subject $subj -body $body -SmtpServer $smtp_server -ErrorAction Stop
   } catch {
     $error = $_.Exception.Message
     Write-Error $error
@@ -436,7 +406,10 @@ function Invoke-GXDBRebuild([string]$proj, [string]$dbulog) {
 
 
 ###############################################################################
+# Action Below                                                                #
+###############################################################################
 
+Send-Email "LAUNCHED ~~~ $env:computername" $(Get-Date)
 
 #----- create $log_dir if it does not exist
 if (-Not (Test-Path -Path $log_dir)) {
@@ -458,7 +431,7 @@ if ($t0 -ne $t1) {
 
 
 #----- send start message (we started earlier, but wait for rebuild list)
-Send-Email "STARTED ~~~ $env:computername" ($rebuilds -join [Environment]::NewLine)
+Send-Email "NURSING ~~~ $env:computername" ($rebuilds -join [Environment]::NewLine)
 
 
 #----- clear active sessions

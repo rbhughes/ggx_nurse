@@ -38,12 +38,12 @@ The project home will need some free disk space. A good rule of thumb is about 2
 
 **Trigger Files**
 
-Place a file named `ggx_nurse_rebuild.txt` directly into a project's "User Files" directory. Example:
+Place a file named `ggx.nurse` directly into a project's "User Files" directory.
+Example:
 
-`C:\ProgramData\GeoGraphix\Stratton\User Files\ggx_nurse_rebuild.txt`
+`C:\ProgramData\GeoGraphix\Stratton\User Files\ggx.nurse`
 
-The `ggx_nurse_rebuild.txt` file can be empty or optionally contain one or more email addresses. Addresses will be used to send STARTED and FINISHED emails (or ERRORs if the rebuild script fails) to all recipients.
-
+File content is ignored.
 
 
 ###Dependencies and Assumptions:
